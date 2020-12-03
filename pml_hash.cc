@@ -7,7 +7,9 @@
  * if the data file does not exist, create it and initial the hash
  */
 PMLHash::PMLHash(const char* file_path) {
-
+    if((start_addr=pmem_map_file(file_path,FILE_SIZE,PMEM_FILE_CREATE,0666,&mapped_len,&is_pmem))==NULL){
+        cout<<"faild to map file."<<endl;
+    }
 }
 /**
  * PMLHash::~PMLHash 
@@ -42,7 +44,7 @@ void PMLHash::split() {
  * then calculate the index by N module
  */
 uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
-
+    return 0;
 }
 
 /**
@@ -53,7 +55,7 @@ uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
  * @return {pm_table*}       : the virtual address of new overflow hash table
  */
 pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
-
+    return NULL;
 }
 
 /**
@@ -70,7 +72,7 @@ pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
  * if the hash table is full then split is triggered
  */
 int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
-
+    return 0;
 }
 
 /**
@@ -83,7 +85,7 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
  * search the target entry and return the value
  */
 int PMLHash::search(const uint64_t &key, uint64_t &value) {
-
+    return 0;
 }
 
 /**
@@ -96,7 +98,7 @@ int PMLHash::search(const uint64_t &key, uint64_t &value) {
  * if the overflow table is empty, remove it from hash
  */
 int PMLHash::remove(const uint64_t &key) {
-
+    return 0;
 }
 
 /**
@@ -109,5 +111,5 @@ int PMLHash::remove(const uint64_t &key) {
  * update an existing entry
  */
 int PMLHash::update(const uint64_t &key, const uint64_t &value) {
-
+    return 0;
 }

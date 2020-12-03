@@ -34,6 +34,8 @@ typedef struct pm_table {
 // persistent memory linear hash
 class PMLHash {
 private:
+    int is_pmem;
+    size_t mapped_len;
     void* start_addr;      // the start address of mapped file
     void* overflow_addr;   // the start address of overflow table array
     metadata* meta;        // virtual address of metadata
