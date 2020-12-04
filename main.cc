@@ -25,6 +25,7 @@
 //         hash.search(i, val);
 //         cout << "key: " << i << "\nvalue: " << val << endl;
 //     }
+    hash.show();
     cout<<"Work Done"<<endl;
     cout<<"sss"<<endl;
     cout << "hello world" << endl;

@@ -48,6 +48,7 @@ private:
     size_t entry_size=sizeof(entry);
 
     void split();
+    void merge();
     uint64_t hashFunc(const uint64_t &key, const size_t &hash_size);
     pm_table* newOverflowTable(uint64_t offset);
 //追加
@@ -62,4 +63,6 @@ public:
     int search(const uint64_t &key, uint64_t &value);
     int remove(const uint64_t &key);
     int update(const uint64_t &key, const uint64_t &value);
+
+    void show();
 };

@@ -68,6 +68,49 @@ void PMLHash::split() {
 /**
  * PMLHash 
  * 
+ * merge the hash table indexed by the meta->next
+ * update the metadata
+ */
+void PMLHash::merge() {
+    if(meta->size == 2){
+        return;
+    }
+
+    // update the next of metadata
+    if(meta->next != 0){
+        meta->next -= 1;
+    }
+    else{
+        N /= 2;
+        meta->next = N-1;
+    }meta->size -= 1;
+
+    pm_table*idx_table1 = table_addr+meta->next;
+    pm_table*idx_table2 = idx_table1+N;
+
+    while(idx_table1->next_offset != 0){
+        idx_table1 = (pm_table *)overflow_addr+idx_table1->next_offset-1;
+    }
+    int i = 0;int j = idx_table1->fill_num;
+    pm_table*new_table;
+    while(i < idx_table2->fill_num || idx_table2->next_offset != 0){
+        if(j == TABLE_SIZE){
+            new_table = newOverflowTable(meta->overflow_num);
+            idx_table1->next_offset = meta->overflow_num;
+            idx_table1 = new_table;
+            j = 0;
+        }
+        idx_table1->kv_arr[j].key = idx_table2->kv_arr[i].key;
+        idx_table1->kv_arr[j].value = idx_table2->kv_arr[i].value;
+        ++i;++j;
+        if(i == TABLE_SIZE && idx_table2->next_offset != 0){
+            idx_table2 = (pm_table *)overflow_addr+idx_table2->next_offset-1;
+        }
+    }
+}
+/**
+ * PMLHash 
+ * 
  * @param  {uint64_t} key     : key
  * @param  {size_t} hash_size : the N in hash func: idx = hash % N
  * @return {uint64_t}         : index of hash table array
@@ -120,7 +163,7 @@ pm_table* PMLHash::newOverflowTable(uint64_t offset) {
  * if the hash table is full then split is triggered
  */
 int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
-    uint64_t idx=hashFunc(key,value);
+    uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;
     uint64_t num=idx_table->fill_num;
     uint64_t offset=idx_table->next_offset;
@@ -166,7 +209,40 @@ int PMLHash::search(const uint64_t &key, uint64_t &value) {
  * if the overflow table is empty, remove it from hash
  */
 int PMLHash::remove(const uint64_t &key) {
-    return 0;
+    uint64_t idx=hashFunc(key,N);
+    pm_table*idx_table=table_addr+idx;
+
+    pm_table*now_table=idx_table;
+    pm_table*pre_table=nullptr;   //the pre of last_table
+    pm_table*last_table=idx_table;//the last of overflowpage
+
+    //calculate the total count of element
+    uint64_t num=idx_table->fill_num;
+    while(last_table->next_offset == 0){
+        pre_table = last_table;
+        last_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        num += last_table->fill_num;
+    }
+    int ans = -1;
+    for(int i = 0;i < num;++i){
+        if(now_table->kv_arr[i%TABLE_SIZE].key == key){
+            ans = now_table->kv_arr[i%TABLE_SIZE].value;
+            now_table->kv_arr[i%TABLE_SIZE].key = last_table->kv_arr[(num-1)%TABLE_SIZE].key;
+            now_table->kv_arr[i%TABLE_SIZE].value = last_table->kv_arr[(num-1)%TABLE_SIZE].value;
+            last_table->fill_num -= 1;
+            if(last_table->fill_num == 0){
+                if(pre_table){
+                    pre_table->next_offset = 0;
+                }else{
+                    merge();
+                }
+            }break;
+        }
+        if((i+1)%TABLE_SIZE == 0){
+            now_table = (pm_table *)overflow_addr+now_table->next_offset;
+        }
+    }
+    return ans;
 }
 
 /**
@@ -180,4 +256,8 @@ int PMLHash::remove(const uint64_t &key) {
  */
 int PMLHash::update(const uint64_t &key, const uint64_t &value) {
     return 0;
+}
+
+void PMLHash::show(){
+
 }
