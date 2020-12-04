@@ -34,7 +34,7 @@ typedef struct pm_table {
 
 // persistent memory linear hash
 class PMLHash {
-private:
+public:
     int is_pmem;
     size_t mapped_len;
     void* start_addr;      // the start address of mapped file
@@ -50,10 +50,9 @@ private:
     void split();
     void merge();
     uint64_t hashFunc(const uint64_t &key, const size_t &hash_size);
-    pm_table* newOverflowTable(uint64_t offset);
+    pm_table* newOverflowTable(uint64_t &offset);
 //追加
-    uint64_t FindOverflowTable(uint64_t offset);
-
+    void inside_insert(pm_table*new_table,uint64_t key);
 public:
     PMLHash() = delete;
     PMLHash(const char* file_path);

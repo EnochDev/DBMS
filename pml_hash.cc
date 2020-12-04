@@ -11,7 +11,7 @@ PMLHash::PMLHash(const char* file_path) {
         cout<<"faild to map file."<<endl;
     }
     cout<<start_addr<<endl;
-    metadata * meta = (metadata*)start_addr;
+    meta = (metadata*)start_addr;
     meta->level=1;
     meta->next=0;
     meta->overflow_num=0;
@@ -43,27 +43,43 @@ PMLHash::~PMLHash() {
  * update the metadata
  */
 void PMLHash::split() { 
-    uint64_t mod_num=(int)pow(2,meta->level+1);
     pm_table*new_table=table_addr+meta->size;
     new_table->fill_num=0;
     new_table->next_offset=0;
-    meta->size+=1;
-    meta->next+=1;
     //想办法更新到新表
     pm_table * pre_table = table_addr+meta->next;
-    
-
+    pm_table * temp_table=pre_table;
+    uint64_t i=0,j=0,off_set_recorder=0;
+    uint64_t newN=N*2;
+    off_set_recorder=pre_table->next_offset;
+    while(i<(pre_table->fill_num)||pre_table->next_offset!=0){
+        if(pre_table->kv_arr[i].key%newN!=meta->size){
+            if(j==TABLE_SIZE){
+                temp_table=table_addr+off_set_recorder;
+                off_set_recorder=temp_table->next_offset;
+                j=0;
+            }
+            temp_table->kv_arr[j].key=pre_table->kv_arr[i].key;
+            temp_table->kv_arr[j].value=pre_table->kv_arr[i].value;
+            j++;
+        }else{
+            inside_insert(new_table,pre_table->kv_arr[i].key);
+        }
+        i++;
+        if(i == TABLE_SIZE && pre_table->next_offset != 0){
+            pre_table = (pm_table *)overflow_addr+pre_table->next_offset-1;
+            i = 0;
+        }
+    }
+    temp_table->next_offset=0;
+    temp_table->fill_num=j;
+    meta->size+=1;
+    meta->next+=1;
     if(meta->next==N){
         meta->level+=1;
         meta->next=0;
         N*=2;
     }
-    // fill the split table
-
-    // fill the new table
-
-    // update the next of metadata
-
 }
 /**
  * PMLHash 
@@ -130,26 +146,40 @@ uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
  *                             to the start of the whole file
  * @return {pm_table*}       : the virtual address of new overflow hash table
  */
-pm_table* PMLHash::newOverflowTable(uint64_t offset) {
-    pm_table*idx_overflow_table=NULL;
-    while(offset){
-        idx_overflow_table=(pm_table*)overflow_addr+offset;
-        offset=idx_overflow_table->next_offset;
-    }
-    int num=idx_overflow_table->fill_num;
-    if(num<TABLE_SIZE)
-        return idx_overflow_table;
-    else{
-        meta->overflow_num+=1;
-        idx_overflow_table->next_offset=meta->overflow_num;
-        idx_overflow_table=(pm_table*)overflow_addr+offset;
-        idx_overflow_table->fill_num=0;
-        idx_overflow_table->next_offset=0;
-        return idx_overflow_table;
-    }
+pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
+    return (pm_table*)overflow_addr+meta->overflow_num;
 }
 
-
+void PMLHash::inside_insert(pm_table*new_table,uint64_t key){
+    pm_table*idx_table=new_table;
+    uint64_t num=idx_table->fill_num;
+    uint64_t offset=idx_table->next_offset;
+    if(num<TABLE_SIZE){
+        entry*entry_addr=idx_table->kv_arr;
+        entry_addr=entry_addr+num;
+        entry_addr->key=key;
+        entry_addr->value=key;
+        idx_table->fill_num+=1;
+    }else{
+        while(idx_table->next_offset){
+            idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        }
+        if(idx_table->fill_num==TABLE_SIZE){
+            meta->overflow_num+=1;
+            idx_table->next_offset=meta->overflow_num;
+            idx_table=(pm_table*)overflow_addr+idx_table->next_offset-1;
+            idx_table->fill_num=0;
+            idx_table->next_offset=0;
+        }
+        num=idx_table->fill_num;
+        entry*entry_addr=(entry*)idx_table;
+        entry_addr=entry_addr+num;
+        entry_addr->key=key;
+        entry_addr->value=key;
+        idx_table->fill_num+=1;
+    }
+    return ;
+}
 /**
  * PMLHash 
  * 
@@ -175,7 +205,16 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
         entry_addr->value=value;
         idx_table->fill_num+=1;
     }else{
-        idx_table=newOverflowTable(offset);
+        while(idx_table->next_offset){
+            idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        }
+        if(idx_table->fill_num==TABLE_SIZE){
+            meta->overflow_num+=1;
+            idx_table->next_offset=meta->overflow_num;
+            idx_table=(pm_table*)overflow_addr+idx_table->next_offset-1;
+            idx_table->fill_num=0;
+            idx_table->next_offset=0;
+        }
         num=idx_table->fill_num;
         entry*entry_addr=(entry*)idx_table;
         entry_addr=entry_addr+num;
