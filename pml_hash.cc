@@ -105,6 +105,7 @@ void PMLHash::merge() {
         ++i;++j;
         if(i == TABLE_SIZE && idx_table2->next_offset != 0){
             idx_table2 = (pm_table *)overflow_addr+idx_table2->next_offset-1;
+            i = 0;
         }
     }
 }
@@ -259,5 +260,12 @@ int PMLHash::update(const uint64_t &key, const uint64_t &value) {
 }
 
 void PMLHash::show(){
+    pm_table * idx_table;int j;
+    for(int i = 0;i < meta->size;++i){
+        idx_table = table_addr+i;j = 0;
+        while(j < idx_table->fill_num || idx_table->next_offset != 0){
+            
+        }
 
+    }
 }
