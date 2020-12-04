@@ -2,6 +2,9 @@
 
  int main() {
     PMLHash hash("/mnt/pmemdir/map_file");
+    hash.insert(6284781860667377211,6284781860667377211);
+    hash.insert(8517097267634966620,8517097267634966620);
+    hash.insert(1820151046732198393,1820151046732198393);
 //     for (uint64_t i = 1; i <= HASH_SIZE * TABLE_SIZE; i++) {
 //         hash.insert(i, i);
 //     }
