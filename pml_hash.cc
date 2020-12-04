@@ -219,7 +219,7 @@ int PMLHash::remove(const uint64_t &key) {
 
     //calculate the total count of element
     uint64_t num=idx_table->fill_num;
-    while(last_table->next_offset == 0){
+    while(last_table->next_offset != 0){
         pre_table = last_table;
         last_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
         num += last_table->fill_num;
