@@ -2,11 +2,11 @@
 
  int main() {
     PMLHash hash("/mnt/pmemdir/map_file");
-    for(uint64_t i=0;i<100;i++){
+    for(uint64_t i=0;i<1000;i++){
         hash.insert(i,i);
     }
     hash.show();
-    for(uint64_t i=0;i<100;i++){
+    for(uint64_t i=0;i<1000;i++){
         hash.remove(i);
     }
 //     for (uint64_t i = 1; i <= HASH_SIZE * TABLE_SIZE; i++) {
