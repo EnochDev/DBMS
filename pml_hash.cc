@@ -240,7 +240,7 @@ int PMLHash::remove(const uint64_t &key) {
             }break;
         }
         if((i+1)%TABLE_SIZE == 0){
-            now_table = (pm_table *)overflow_addr+now_table->next_offset;
+            now_table = (pm_table *)overflow_addr+now_table->next_offset-1;
         }
     }
     return ans;
@@ -263,9 +263,14 @@ void PMLHash::show(){
     pm_table * idx_table;int j;
     for(int i = 0;i < meta->size;++i){
         idx_table = table_addr+i;j = 0;
+        cout << "bucket" << i;
         while(j < idx_table->fill_num || idx_table->next_offset != 0){
-            
+            cout << " " << idx_table->kv_arr[j].key;++j;
+            if(j == idx_table->fill_num && idx_table->next_offset != 0){
+                idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+                j = 0;
+            }
         }
-
+        cout << endl;
     }
 }
