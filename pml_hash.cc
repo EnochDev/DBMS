@@ -16,7 +16,7 @@ PMLHash::PMLHash(const char* file_path) {
     meta->overflow_num=0;
     meta->size=2;
     N=(int)pow(2,meta->level);
-    pmem_persist(meta,meta_size);
+    //pmem_persist(meta,meta_size);
 
     table_addr=(pm_table*)((metadata*)start_addr+1);
     table_addr->fill_num=0;
@@ -50,11 +50,11 @@ void PMLHash::split() {
     pm_table * temp_table=pre_table;
     uint64_t i=0,j=0,off_set_recorder=0;
     uint64_t newN=N*2;
-    off_set_recorder=pre_table->next_offset;
+    off_set_recorder=temp_table->next_offset;
     while(i<(pre_table->fill_num)||pre_table->next_offset!=0){
-        if(pre_table->kv_arr[i].key%newN!=meta->size){
+        if(((pre_table->kv_arr[i].key)%newN)!=meta->size){
             if(j==TABLE_SIZE){
-                temp_table=table_addr+off_set_recorder-1;
+                temp_table=(pm_table*)overflow_addr+off_set_recorder-1;
                 off_set_recorder=temp_table->next_offset;
                 j=0;
             }
@@ -114,6 +114,7 @@ void PMLHash::merge() {
         }
         idx_table1->kv_arr[j].key = idx_table2->kv_arr[i].key;
         idx_table1->kv_arr[j].value = idx_table2->kv_arr[i].value;
+        idx_table1->fill_num += 1;
         ++i;++j;
         if(i == TABLE_SIZE && idx_table2->next_offset != 0){
             idx_table2 = (pm_table *)overflow_addr+idx_table2->next_offset-1;
@@ -132,7 +133,11 @@ void PMLHash::merge() {
  * then calculate the index by N module
  */
 uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
-    return key%N;
+    uint64_t temp=key%N;
+    if(temp+N<meta->size)
+        return key%(N*2);
+    else
+        return key%N;
 }
 
 /**
@@ -152,28 +157,26 @@ pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
 }
 
 void PMLHash::inside_insert(pm_table*new_table,uint64_t key){
-    pm_table*idx_table=new_table;
-    uint64_t num=idx_table->fill_num;
-    //uint64_t offset=idx_table->next_offset;
+    uint64_t num=new_table->fill_num;
     if(num<TABLE_SIZE){
-        entry*entry_addr=idx_table->kv_arr;
+        entry*entry_addr=new_table->kv_arr;
         entry_addr=entry_addr+num;
         entry_addr->key=key;
         entry_addr->value=key;
-        idx_table->fill_num+=1;
+        new_table->fill_num+=1;
     }else{
-        while(idx_table->next_offset){
-            idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        while(new_table->next_offset){
+            new_table = (pm_table *)overflow_addr+new_table->next_offset-1;
         }
-        if(idx_table->fill_num==TABLE_SIZE){
-            idx_table=newOverflowTable(idx_table->next_offset);
+        if(new_table->fill_num==TABLE_SIZE){
+            new_table=newOverflowTable(new_table->next_offset);
         }
-        num=idx_table->fill_num;
-        entry*entry_addr=(entry*)idx_table;
+        num=new_table->fill_num;
+        entry*entry_addr=(entry*)new_table;
         entry_addr=entry_addr+num;
         entry_addr->key=key;
         entry_addr->value=key;
-        idx_table->fill_num+=1;
+        new_table->fill_num+=1;
     }
 }
 /**
@@ -193,7 +196,6 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
     uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;
     uint64_t num=idx_table->fill_num;
-    //uint64_t offset=idx_table->next_offset;
     if(num<TABLE_SIZE){
         entry*entry_addr=idx_table->kv_arr;
         entry_addr=entry_addr+num;
@@ -212,8 +214,8 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
         entry_addr=entry_addr+num;
         entry_addr->key=key;
         entry_addr->value=value;
-        idx_table->fill_num+=1;
-        split();
+        idx_table->fill_num+=1; 
+        split(); 
     }
     return 0;
 }
@@ -243,7 +245,6 @@ int PMLHash::search(const uint64_t &key, uint64_t &value) {
 int PMLHash::remove(const uint64_t &key) {
     uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;
-
     pm_table*now_table=idx_table;
     pm_table*pre_table=nullptr;   //the pre of last_table
     pm_table*last_table=idx_table;//the last of overflowpage
@@ -252,7 +253,7 @@ int PMLHash::remove(const uint64_t &key) {
     uint64_t num=idx_table->fill_num;
     while(last_table->next_offset != 0){
         pre_table = last_table;
-        last_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        last_table = (pm_table *)overflow_addr+last_table->next_offset-1;
         num += last_table->fill_num;
     }
     int ans = -1;
@@ -297,7 +298,7 @@ void PMLHash::show(){
         cout << "bucket" << i;
         while(j < idx_table->fill_num || idx_table->next_offset != 0){
             cout << " " << idx_table->kv_arr[j].key;++j;
-            if(j == idx_table->fill_num && idx_table->next_offset != 0){
+            if(j == TABLE_SIZE && idx_table->next_offset != 0){
                 idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
                 j = 0;
             }

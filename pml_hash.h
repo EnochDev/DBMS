@@ -5,6 +5,11 @@
 #include <memory.h>
 #include <vector>
 #include <cmath>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <dirent.h>
+#include <algorithm>
 
 #define TABLE_SIZE 16 // adjustable
 #define HASH_SIZE  16 // adjustable
