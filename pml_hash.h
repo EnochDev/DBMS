@@ -1,3 +1,6 @@
+#ifndef PML_HASH_H
+#define PML_HASH_H
+
 #include <libpmem.h>
 #include <stdint.h>
 #include <iostream>
@@ -10,10 +13,12 @@
 #include <sstream>
 #include <dirent.h>
 #include <algorithm>
+#include <pthread.h>
+#include <time.h>
 
 #define TABLE_SIZE 16 // adjustable
-#define HASH_SIZE  16 // adjustable
-#define FILE_SIZE 1024 * 1024 * 16 // 16 MB adjustable
+#define HASH_SIZE  300000 // adjustable
+#define FILE_SIZE 1024 * 1024 * 160 // 16 MB adjustable
 
 using namespace std;
 
@@ -51,6 +56,10 @@ public:
     size_t meta_size=sizeof(metadata);
     size_t pm_table_size=sizeof(pm_table);
     size_t entry_size=sizeof(entry);
+//加分项变量
+    bool * table_has_or_not_addr;    //溢出页面是否使用
+    //bool * table_use_or_not_addr;    //桶是否使用
+    //bool * table_write_or_read_addr; //桶读或写
 
     void split();
     void merge();
@@ -70,3 +79,6 @@ public:
 
     void show();
 };
+
+
+#endif

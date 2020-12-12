@@ -25,7 +25,13 @@ PMLHash::PMLHash(const char* file_path) {
     pm_table*table_addr2=table_addr+1;
     table_addr2->fill_num=0;
     table_addr2->next_offset=0;
-    overflow_addr=(pm_table*)((char*)start_addr+1024*1024*8);
+
+    overflow_addr=(pm_table*)((char*)start_addr+FILE_SIZE/2);
+
+    table_has_or_not_addr = (bool*)((pm_table*)overflow_addr+HASH_SIZE);
+    for(int i = 0;i < HASH_SIZE;++i){
+        table_has_or_not_addr[i] = false;
+    }
 }
 /**
  * PMLHash::~PMLHash 
@@ -42,6 +48,10 @@ PMLHash::~PMLHash() {
  * update the metadata
  */
 void PMLHash::split() { 
+    if(meta->size == HASH_SIZE){
+        cout << "桶已被使用完" << endl;
+        exit(0);
+    }
     pm_table*new_table=table_addr+meta->size;
     new_table->fill_num=0;
     new_table->next_offset=0;
@@ -69,6 +79,14 @@ void PMLHash::split() {
             pre_table = (pm_table *)overflow_addr+pre_table->next_offset-1;
             i = 0;
         }
+    }
+    //回收处理
+    pm_table * tmp = temp_table;
+    while(tmp->next_offset != 0){
+        off_set_recorder = tmp->next_offset;
+        table_has_or_not_addr[off_set_recorder-1] = false;
+        meta->overflow_num -= 1;
+        tmp = (pm_table*)overflow_addr+off_set_recorder-1;
     }
     temp_table->next_offset=0;
     temp_table->fill_num=j;
@@ -117,10 +135,14 @@ void PMLHash::merge() {
         idx_table1->fill_num += 1;
         ++i;++j;
         if(i == TABLE_SIZE && idx_table2->next_offset != 0){
+            //回收处理
+            table_has_or_not_addr[idx_table2->next_offset-1] = false;
+            meta->overflow_num -= 1;
             idx_table2 = (pm_table *)overflow_addr+idx_table2->next_offset-1;
             i = 0;
         }
     }
+
 }
 /**
  * PMLHash 
@@ -148,8 +170,19 @@ uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
  * @return {pm_table*}       : the virtual address of new overflow hash table
  */
 pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
-    offset = meta->overflow_num+1;
-    pm_table* new_table = (pm_table*)overflow_addr+meta->overflow_num;
+    //offset = meta->overflow_num+1;
+    //pm_table* new_table = (pm_table*)overflow_addr+meta->overflow_num;
+    uint64_t i = 0;
+    while(i < HASH_SIZE && table_has_or_not_addr[i]){
+        ++i;
+    }if(i == HASH_SIZE){
+        cout << "溢出页面已使用完" << endl;
+        exit(0);
+    }
+    offset = i+1;
+    pm_table*new_table = (pm_table*)overflow_addr+i;
+    table_has_or_not_addr[i] = true;
+
     new_table->fill_num = 0;
     new_table->next_offset = 0;
     meta->overflow_num += 1;
@@ -265,6 +298,9 @@ int PMLHash::remove(const uint64_t &key) {
             last_table->fill_num -= 1;
             if(last_table->fill_num == 0){
                 if(pre_table){
+                    //回收处理
+                    table_has_or_not_addr[pre_table->next_offset-1] = false;
+                    meta->overflow_num -= 1;
                     pre_table->next_offset = 0;
                 }else{
                     merge();
@@ -293,16 +329,18 @@ int PMLHash::update(const uint64_t &key, const uint64_t &value) {
 
 void PMLHash::show(){
     pm_table * idx_table;uint64_t j;
+    uint64_t cnt = 0;
     for(uint64_t i = 0;i < meta->size;++i){
         idx_table = table_addr+i;j = 0;
-        cout << "bucket" << i;
+        //cout << "bucket" << i;
         while(j < idx_table->fill_num || idx_table->next_offset != 0){
-            cout << " " << idx_table->kv_arr[j].key;++j;
+            //cout << " " << idx_table->kv_arr[j].key;++j;
+            ++cnt;++j;
             if(j == TABLE_SIZE && idx_table->next_offset != 0){
                 idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
                 j = 0;
             }
         }
-        cout << endl;
-    }
+        //cout << endl;
+    }cout << "共有元素" << cnt << "个" << endl;
 }
