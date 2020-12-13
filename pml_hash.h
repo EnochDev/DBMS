@@ -17,8 +17,8 @@
 #include <time.h>
 
 #define TABLE_SIZE 16 // adjustable
-#define HASH_SIZE  300000 // adjustable
-#define FILE_SIZE 1024 * 1024 * 160 // 16 MB adjustable
+#define HASH_SIZE  30000 // adjustable
+#define FILE_SIZE 1024 * 1024 * 16 // 16 MB adjustable
 
 using namespace std;
 

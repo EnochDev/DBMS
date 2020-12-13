@@ -7,17 +7,19 @@
  * if the data file does not exist, create it and initial the hash
  */
 PMLHash::PMLHash(const char* file_path) {
+    //获取初始化内存的起始地址
     if((start_addr=pmem_map_file(file_path,FILE_SIZE,PMEM_FILE_CREATE,0666,&mapped_len,&is_pmem))==NULL){
         cout<<"faild to map file."<<endl;
     }
+    //初始化meta
     meta = (metadata*)start_addr;
     meta->level=1;
     meta->next=0;
     meta->overflow_num=0;
     meta->size=2;
     N=(int)pow(2,meta->level);
-    //pmem_persist(meta,meta_size);
 
+    //初始哈希表为两个桶
     table_addr=(pm_table*)((metadata*)start_addr+1);
     table_addr->fill_num=0;
     table_addr->next_offset=0;
@@ -25,9 +27,9 @@ PMLHash::PMLHash(const char* file_path) {
     pm_table*table_addr2=table_addr+1;
     table_addr2->fill_num=0;
     table_addr2->next_offset=0;
-
+    //初始化溢出页面的起始地址
     overflow_addr=(pm_table*)((char*)start_addr+FILE_SIZE/2);
-
+    //建立bitmap用以实现溢出空间回收
     table_has_or_not_addr = (bool*)((pm_table*)overflow_addr+HASH_SIZE);
     for(int i = 0;i < HASH_SIZE;++i){
         table_has_or_not_addr[i] = false;
@@ -39,6 +41,8 @@ PMLHash::PMLHash(const char* file_path) {
  * unmap and close the data file
  */
 PMLHash::~PMLHash() {
+    //将已修改内容同步到持久化内存上
+    pmem_persist(start_addr, FILE_SIZE);
     pmem_unmap(start_addr, FILE_SIZE);
 }
 /**
@@ -105,11 +109,12 @@ void PMLHash::split() {
  * update the metadata
  */
 void PMLHash::merge() {
+    //只剩两个桶，不需要合并
     if(meta->size == 2){
         return;
     }
 
-    // update the next of metadata
+    //更新next指针
     if(meta->next != 0){
         meta->next -= 1;
     }
@@ -118,12 +123,16 @@ void PMLHash::merge() {
         meta->next = N-1;
     }meta->size -= 1;
 
+    //分别指向要合并的两个桶
     pm_table*idx_table1 = table_addr+meta->next;
     pm_table*idx_table2 = idx_table1+N;
 
+    //遍历到第一个桶的末尾
     while(idx_table1->next_offset != 0){
         idx_table1 = (pm_table *)overflow_addr+idx_table1->next_offset-1;
     }
+
+    //将第二个桶的元素依顺序写入第一个桶的末尾，以实现合并
     uint64_t i = 0;uint64_t j = idx_table1->fill_num;
     while(i < idx_table2->fill_num || idx_table2->next_offset != 0){
         if(j == TABLE_SIZE){
@@ -170,8 +179,6 @@ uint64_t PMLHash::hashFunc(const uint64_t &key, const size_t &hash_size) {
  * @return {pm_table*}       : the virtual address of new overflow hash table
  */
 pm_table* PMLHash::newOverflowTable(uint64_t &offset) {
-    //offset = meta->overflow_num+1;
-    //pm_table* new_table = (pm_table*)overflow_addr+meta->overflow_num;
     uint64_t i = 0;
     while(i < HASH_SIZE && table_has_or_not_addr[i]){
         ++i;
@@ -298,19 +305,21 @@ int PMLHash::search(const uint64_t &key, uint64_t &value) {
  * if the overflow table is empty, remove it from hash
  */
 int PMLHash::remove(const uint64_t &key) {
+    //根据key找到要删除元素所在的桶
     uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;
     pm_table*now_table=idx_table;
     pm_table*pre_table=nullptr;   //the pre of last_table
     pm_table*last_table=idx_table;//the last of overflowpage
 
-    //calculate the total count of element
+    //计算桶里元素个数，同时找到桶里最后一个元素
     uint64_t num=idx_table->fill_num;
     while(last_table->next_offset != 0){
         pre_table = last_table;
         last_table = (pm_table *)overflow_addr+last_table->next_offset-1;
         num += last_table->fill_num;
     }
+    //用桶里的最后一个元素代替要删除的元素以实现删除
     int ans = -1;
     for(uint64_t i = 0;i < num;++i){
         if(now_table->kv_arr[i%TABLE_SIZE].key == key){
@@ -324,7 +333,7 @@ int PMLHash::remove(const uint64_t &key) {
                     table_has_or_not_addr[pre_table->next_offset-1] = false;
                     meta->overflow_num -= 1;
                     pre_table->next_offset = 0;
-                }else{
+                }else{//当桶被删空的时候触发桶合并
                     merge();
                 }
             }break;
