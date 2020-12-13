@@ -353,7 +353,7 @@ int PMLHash::update(const uint64_t &key, const uint64_t &value) {
             if(idx_table->kv_arr[i].key == key)
             {
                 idx_table->kv_arr[i].value = value;
-                pmem_persist();//不清楚对不对
+                //pmem_persist();//不清楚对不对
                 return 0;
             }
         }
