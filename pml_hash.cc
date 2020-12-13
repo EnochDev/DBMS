@@ -262,8 +262,26 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
  * 
  * search the target entry and return the value
  */
-int PMLHash::search(const uint64_t &key, uint64_t &value) {
-    return 0;
+int PMLHash::search(const uint64_t &key, uint64_t &value) {uint64_t idx=hashFunc(key,N);
+    uint64_t idx=hashFunc(key,N);
+    pm_table*idx_table=table_addr+idx;//桶地址
+    uint64_t num=idx_table->fill_num;//桶数据项的个数
+
+    do
+    {
+        for(int i = 0;i < num;i++)
+        {
+            if(idx_table->kv_arr[i].key == key)
+            {
+                value = idx_table->kv_arr[i].value;
+                return 0;
+            }
+        }
+        idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        num=idx_table->fill_num;
+    }while(idx_table->next_offset);
+   
+    return -1;
 }
 
 /**
@@ -324,7 +342,26 @@ int PMLHash::remove(const uint64_t &key) {
  * update an existing entry
  */
 int PMLHash::update(const uint64_t &key, const uint64_t &value) {
-    return 0;
+    uint64_t idx=hashFunc(key,N);
+    pm_table*idx_table=table_addr+idx;//桶地址
+    uint64_t num=idx_table->fill_num;//桶数据项的个数
+
+    do
+    {
+        for(int i = 0;i < num;i++)
+        {
+            if(idx_table->kv_arr[i].key == key)
+            {
+                idx_table->kv_arr[i].value = value;
+                pmem_persist();//不清楚对不对
+                return 0;
+            }
+        }
+        idx_table = (pm_table *)overflow_addr+idx_table->next_offset-1;
+        num=idx_table->fill_num;
+    }while(idx_table->next_offset);
+   
+    return -1;
 }
 
 void PMLHash::show(){
