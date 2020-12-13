@@ -229,6 +229,10 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
     uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;
     uint64_t num=idx_table->fill_num;
+    uint64_t val;
+    if(!search(key,val)){
+        return 0;
+    }
     if(num<TABLE_SIZE){
         entry*entry_addr=idx_table->kv_arr;
         entry_addr=entry_addr+num;
@@ -262,14 +266,14 @@ int PMLHash::insert(const uint64_t &key, const uint64_t &value) {
  * 
  * search the target entry and return the value
  */
-int PMLHash::search(const uint64_t &key, uint64_t &value) {uint64_t idx=hashFunc(key,N);
+int PMLHash::search(const uint64_t &key, uint64_t &value) {
     uint64_t idx=hashFunc(key,N);
     pm_table*idx_table=table_addr+idx;//桶地址
     uint64_t num=idx_table->fill_num;//桶数据项的个数
 
     do
     {
-        for(int i = 0;i < num;i++)
+        for(uint64_t i= 0;i < num;i++)
         {
             if(idx_table->kv_arr[i].key == key)
             {
@@ -348,7 +352,7 @@ int PMLHash::update(const uint64_t &key, const uint64_t &value) {
 
     do
     {
-        for(int i = 0;i < num;i++)
+        for(uint64_t i = 0;i < num;i++)
         {
             if(idx_table->kv_arr[i].key == key)
             {
