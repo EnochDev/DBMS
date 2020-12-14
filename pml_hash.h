@@ -13,7 +13,6 @@
 #include <sstream>
 #include <dirent.h>
 #include <algorithm>
-#include <pthread.h>
 #include <time.h>
 
 #define TABLE_SIZE 16 // adjustable
@@ -57,9 +56,7 @@ public:
     size_t pm_table_size=sizeof(pm_table);
     size_t entry_size=sizeof(entry);
 //加分项变量
-    bool * table_has_or_not_addr;    //溢出页面是否使用
-    //bool * table_use_or_not_addr;    //桶是否使用
-    //bool * table_write_or_read_addr; //桶读或写
+    bool * table_has_or_not_addr;    //溢出页面是否使用，true表示正在使用,false表示未使用
 
     void split();
     void merge();
@@ -67,6 +64,7 @@ public:
     pm_table* newOverflowTable(uint64_t &offset);
 //追加
     void inside_insert(pm_table*new_table,uint64_t key);
+    
 public:
     PMLHash() = delete;
     PMLHash(const char* file_path);
@@ -79,6 +77,5 @@ public:
 
     void show();
 };
-
 
 #endif
