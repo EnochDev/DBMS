@@ -333,10 +333,11 @@ int PMLHash::search(const uint64_t &key, uint64_t &value) {
 int PMLHash::remove(const uint64_t &key) {
     //根据key找到要删除元素所在的桶
     uint64_t idx=hashFunc(key,N);
+    
     pm_table*idx_table=table_addr+idx;
-    pm_table*now_table=idx_table;
-    pm_table*pre_table=nullptr;   //the pre of last_table
-    pm_table*last_table=idx_table;//the last of overflowpage
+    pm_table*now_table=idx_table; //指向目标键值所在的桶
+    pm_table*pre_table=nullptr;   //last_table的前一个桶，用于找到最后一个桶
+    pm_table*last_table=idx_table;//桶序号为idx的最后一个桶
 
     //计算桶里元素个数，同时找到桶里最后一个元素
     uint64_t num=idx_table->fill_num;
