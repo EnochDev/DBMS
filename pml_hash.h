@@ -55,6 +55,7 @@ public:
     size_t meta_size=sizeof(metadata);
     size_t pm_table_size=sizeof(pm_table);
     size_t entry_size=sizeof(entry);
+
 //加分项变量
     bool * table_has_or_not_addr;    //溢出页面是否使用，true表示正在使用,false表示未使用
 
