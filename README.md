@@ -2,23 +2,33 @@
 **[仓库地址](https://github.com/EnochDev/DBMS/)**
 
 ## 成员及环境
-**小组成员：陈杨平 王宇春 李怡臻**   
-**环境：windows10 虚拟机 Ubuntu20.04**
+**小组成员：**    
+**&emsp;&emsp;陈杨平 18341005**  
+**&emsp;&emsp;王宇春 18341035**  
+**&emsp;&emsp;李怡臻 18341019**  
+&nbsp;    
+**环境：**  
+**&emsp;&emsp;windows10下虚拟机模拟ubuntu**  
+**&emsp;&emsp;Ubuntu版本号：Ubuntu20.04**
 
 ## 报告目录
 1. [环境配置](#环境配置)  
 1.1 利用普通内存模拟NVM环境并测试是否配置正确  
 1.2 根据PMDK的README安装教程进行库安装
-2. [数据结构设计](#数据结构设计)   
-3. [操作设计](#操作设计)
-4. [YCSB测试](#YCSB测试) 
-5. [加分项](#加分项)
+2. [数据结构设计](#数据结构设计) 
+3. [运行说明](#运行说明)
+4. [操作设计](#操作设计)
+5. [YCSB测试](#YCSB测试) 
+6. [加分项](#加分项)
 
 ## 环境配置
 
-### NVM环境模拟  
+### NVM环境模拟  PMDK库安装 
 
-### PMDK库安装  
+此项详见每位组员的个人配置报告  
+[王宇春的环境配置](https://github.com/EnochDev/DBMS/blob/main/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE_18341035%E7%8E%8B%E5%AE%87%E6%98%A5.pdf)  
+[陈杨平的环境配置](https://github.com/EnochDev/DBMS/blob/main/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE_18341005%E9%99%88%E6%9D%A8%E5%B9%B3.pdf)  
+[李怡臻的环境配置](https://github.com/EnochDev/DBMS/blob/main/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE_18341019%E6%9D%8E%E6%80%A1%E8%87%BB.pdf)  
 
 ## 数据结构设计
 PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，在Overflow Hash Table后加入<font color=red>**Bitmap**</font>，结构如下：
@@ -41,6 +51,13 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 
 // Bitmap
 | bool[0] | bool[1] | ... | bool[m] |
+```
+
+## 运行说明
+
+进入Ubuntu系统，在确保环境配置正确后，运行文件夹下的<font color=red>run.sh</font>文件,即可运行代码
+```
+./run.sh
 ```
 
 ## 操作设计
@@ -73,7 +90,8 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
     cout<<"------------------------"<<endl;
 ```
 #### 运行结果
-![avatar](https://raw.githubusercontent.com/EnochDev/Code/master/002.png)
+
+[![rNXKje.png](https://s3.ax1x.com/2020/12/19/rNXKje.png)](https://imgchr.com/i/rNXKje)
 
 ### Remove
 
@@ -102,7 +120,7 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 
 #### 运行结果
 
-![avatar](https://raw.githubusercontent.com/EnochDev/Code/master/003.png)
+[![rNXrEn.png](https://s3.ax1x.com/2020/12/19/rNXrEn.png)](https://imgchr.com/i/rNXrEn)
 
 ### Update
 
@@ -133,35 +151,8 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 ```
 
 #### 运行结果
-```
-0 0
-1 1
-2 2
-3 3
-4 4
-5 5
-6 6
-7 7
-8 8
-9 9
-共有元素10个
-Work Done!
-------------------------
-After update
-------------------------
-0 100
-1 101
-2 102
-3 103
-4 104
-5 105
-6 106
-7 107
-8 108
-9 109
-Work Done!
-------------------------
-```
+
+[![rNXb8K.png](https://s3.ax1x.com/2020/12/19/rNXb8K.png)](https://imgchr.com/i/rNXb8K)
 
 ### Search
 
@@ -188,24 +179,8 @@ Work Done!
 ```
 
 #### 运行结果
-```
-共有元素500个
-Work Done!
-------------------------
-searching...
-490 490
-491 491
-492 492
-493 493
-494 494
-495 495
-496 496
-497 497
-498 498
-499 499
-Work Done!
-------------------------
-```
+
+[![rNX4b9.png](https://s3.ax1x.com/2020/12/19/rNX4b9.png)](https://imgchr.com/i/rNX4b9)
 
 ## YCSB测试
 
