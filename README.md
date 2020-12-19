@@ -91,7 +91,7 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 ```
 #### 运行结果
 
-[![rNXKje.png](https://s3.ax1x.com/2020/12/19/rNXKje.png)](https://imgchr.com/i/rNXKje)
+![avatar](https://s3.ax1x.com/2020/12/19/rNXKje.png)
 
 ### Remove
 
@@ -120,7 +120,7 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 
 #### 运行结果
 
-[![rNXrEn.png](https://s3.ax1x.com/2020/12/19/rNXrEn.png)](https://imgchr.com/i/rNXrEn)
+![avatr](https://s3.ax1x.com/2020/12/19/rNXrEn.png)
 
 ### Update
 
@@ -152,7 +152,7 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 
 #### 运行结果
 
-[![rNXb8K.png](https://s3.ax1x.com/2020/12/19/rNXb8K.png)](https://imgchr.com/i/rNXb8K)
+![avatar](https://s3.ax1x.com/2020/12/19/rNXb8K.png)
 
 ### Search
 
@@ -180,7 +180,7 @@ PMLHash的所有数据放在一个16MB的文件中存储，在原有基础下，
 
 #### 运行结果
 
-[![rNX4b9.png](https://s3.ax1x.com/2020/12/19/rNX4b9.png)](https://imgchr.com/i/rNX4b9)
+![avatar](https://s3.ax1x.com/2020/12/19/rNX4b9.png)
 
 ## YCSB测试
 
